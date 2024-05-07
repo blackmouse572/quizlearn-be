@@ -1,0 +1,5 @@
+{
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    "typescript.preferences.quoteStyle": "single",
+    "editor.tabSize": 4
+}
