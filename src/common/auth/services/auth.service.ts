@@ -291,4 +291,13 @@ export class AuthService {
     ): Promise<IHelperGooglePayload> {
         return this.helperGoogleService.getTokenInfo(accessToken);
     }
+
+    createForgotPasswordToken(): string | Promise<string> {
+        const token = this.helperStringService.random(8);
+        return token;
+    }
+    getForgotPasswordTokenExpires(): Date | PromiseLike<Date> {
+        const expires = this.helperDateService.forwardInMinutes(60);
+        return expires;
+    }
 }
