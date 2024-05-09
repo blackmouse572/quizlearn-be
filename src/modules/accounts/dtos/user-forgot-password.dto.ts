@@ -5,7 +5,7 @@ import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class UserForgotPasswordDto {
     @ApiProperty({
-        example: faker.internet.email,
+        example: faker.internet.email(),
         required: true,
     })
     @IsString()

@@ -33,10 +33,6 @@ export default async function (app: NestApplication) {
                 { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
                 'refreshToken'
             )
-            .addApiKey(
-                { type: 'apiKey', in: 'header', name: 'x-api-key' },
-                'apiKey'
-            )
             .build();
 
         const document = SwaggerModule.createDocument(app, documentBuild);

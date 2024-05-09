@@ -1,22 +1,8 @@
-import {
-    Body,
-    ConflictException,
-    Controller,
-    Delete,
-    Get,
-    NotFoundException,
-    Patch,
-    Post,
-    Put,
-} from '@nestjs/common';
+import { Controller, Get, Param, Patch } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthJwtAdminAccessProtected } from 'src/common/auth/decorators/auth.decorator';
-import { IAuthPassword } from 'src/common/auth/interfaces/auth.interface';
 import { AuthService } from 'src/common/auth/services/auth.service';
-import {
-    IResponse,
-    IResponsePaging,
-} from 'src/common/helpers/interfaces/response.interface';
+import { IResponsePaging } from 'src/common/helpers/interfaces/response.interface';
 import {
     PaginationQuery,
     PaginationQueryFilterEqualObjectId,
@@ -26,7 +12,6 @@ import { PaginationListDto } from 'src/common/pagination/dto/pagination.list.dto
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
 import { RequestParamGuard } from 'src/lib/guards/request.decorator';
 import {
-    ENUM_USER_SIGN_UP_FROM,
     USER_DEFAULT_AVAILABLE_ORDER_BY,
     USER_DEFAULT_AVAILABLE_SEARCH,
     USER_DEFAULT_BLOCKED,
@@ -34,12 +19,15 @@ import {
     USER_DEFAULT_ORDER_DIRECTION,
     USER_DEFAULT_PER_PAGE,
 } from 'src/modules/accounts/constants/user.constant';
+import {
+    UserAdminGetGuard,
+    UserAdminUpdateInactiveGuard,
+} from 'src/modules/accounts/decorators/admin.decorator';
 import { GetUser } from 'src/modules/accounts/decorators/user.decorator';
-import { UserCreateDto } from 'src/modules/accounts/dtos/user-create.dto';
-import { UserUpdateNameDto } from 'src/modules/accounts/dtos/user-update.dto';
 import { UserRequestDto } from 'src/modules/accounts/dtos/user.req.dto';
 import { UserDoc } from 'src/modules/accounts/repository/entities/user.entity';
 import { UserService } from 'src/modules/accounts/services/account.service';
+import { EmailService } from 'src/modules/email/services/email.service';
 
 @ApiTags('modules.admin.user')
 @Controller({
@@ -50,12 +38,12 @@ export class UserAdminController {
     constructor(
         private readonly authService: AuthService,
         private readonly paginationService: PaginationService,
-        private readonly userService: UserService
-        // private readonly emailService: EmailService
+        private readonly userService: UserService,
+        private readonly emailService: EmailService
     ) {}
 
     @AuthJwtAdminAccessProtected()
-    @Get('/accounts')
+    @Get('/')
     async list(
         @PaginationQuery(
             USER_DEFAULT_PER_PAGE,
@@ -105,19 +93,19 @@ export class UserAdminController {
     @AuthJwtAdminAccessProtected()
     @RequestParamGuard(UserRequestDto)
     @Get('/:user')
-    async get(@GetUser() user: UserDoc): Promise<IResponse> {
-        return { data: user.toObject() };
+    async get(
+        @GetUser() user: UserDoc,
+        @Param('user') _user: string
+    ): Promise<UserDoc> {
+        if (user.id === _user) {
+            return user;
+        }
+
+        return await this.userService.findOneById(_user);
     }
 
-    @UserAdminInactiveDoc()
-    @Response('user.inactive')
     @UserAdminUpdateInactiveGuard()
-    @PolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.USER,
-        action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
-    })
     @AuthJwtAdminAccessProtected()
-    @ApiKeyPublicProtected()
     @RequestParamGuard(UserRequestDto)
     @Patch('/update/:user/inactive')
     async inactive(@GetUser() user: UserDoc): Promise<void> {
@@ -126,54 +114,33 @@ export class UserAdminController {
         return;
     }
 
-    @UserAdminActiveDoc()
-    @Response('user.active')
-    @UserAdminUpdateActiveGuard()
-    @PolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.USER,
-        action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
-    })
-    @AuthJwtAdminAccessProtected()
-    @ApiKeyPublicProtected()
-    @RequestParamGuard(UserRequestDto)
-    @Patch('/update/:user/active')
-    async active(@GetUser() user: UserDoc): Promise<void> {
-        await this.userService.active(user);
+    // @UserAdminUpdateActiveGuard()
+    // @AuthJwtAdminAccessProtected()
+    // @RequestParamGuard(UserRequestDto)
+    // @Patch('/update/:user/active')
+    // async active(@GetUser() user: UserDoc): Promise<void> {
+    //     await this.userService.active(user);
 
-        return;
-    }
+    //     return;
+    // }
 
-    @UserAdminBlockedDoc()
-    @Response('user.blocked')
-    @UserAdminUpdateBlockedGuard()
-    @PolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.USER,
-        action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.UPDATE],
-    })
-    @AuthJwtAdminAccessProtected()
-    @ApiKeyPublicProtected()
-    @RequestParamGuard(UserRequestDto)
-    @Patch('/update/:user/blocked')
-    async blocked(@GetUser() user: UserDoc): Promise<void> {
-        await this.userService.blocked(user);
+    // @UserAdminUpdateBlockedGuard()
+    // @AuthJwtAdminAccessProtected()
+    // @RequestParamGuard(UserRequestDto)
+    // @Patch('/update/:user/blocked')
+    // async blocked(@GetUser() user: UserDoc): Promise<void> {
+    //     await this.userService.blocked(user);
 
-        return;
-    }
+    //     return;
+    // }
 
-    @UserAdminDeleteDoc()
-    @Response('user.delete')
-    @UserAdminDeleteGuard()
-    @PolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.USER,
-        action: [ENUM_POLICY_ACTION.READ, ENUM_POLICY_ACTION.DELETE],
-    })
-    @AuthJwtAdminAccessProtected()
-    @ApiKeyPublicProtected()
-    @RequestParamGuard(UserRequestDto)
-    @Delete('/delete/:user')
-    async delete(@GetUser() user: UserDoc): Promise<void> {
-        await this.userService.delete(user);
+    // @UserAdminDeleteGuard()
+    // @AuthJwtAdminAccessProtected()
+    // @RequestParamGuard(UserRequestDto)
+    // @Delete('/delete/:user')
+    // async delete(@GetUser() user: UserDoc): Promise<void> {
+    //     await this.userService.delete(user);
 
-        return;
-    }
+    //     return;
+    // }
 }

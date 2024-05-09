@@ -120,4 +120,9 @@ export interface IUserService {
         resetTokenExpires: Date,
         options?: IDatabaseSaveOptions
     ): Promise<UserDoc>;
+    updateVerifyToken(
+        repository: UserDoc,
+        verifyToken: string,
+        options?: IDatabaseSaveOptions
+    ): Promise<UserDoc>;
 }

@@ -1,12 +1,18 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import Joi from 'joi';
+import { AuthModule } from 'src/common/auth/auth.module';
 import { DATABASE_CONNECTION_NAME } from 'src/common/database/constants/database.constraint';
 import { DatabaseOptionsModule } from 'src/common/database/database.options.module';
 import { DatabaseOptionsService } from 'src/common/database/service/database.options.service';
+import { HelpersModule } from 'src/common/helpers/helpers.module';
+import { AppLoggerMiddleware } from 'src/common/logger/middleware/request.logger';
 import configs from 'src/configs';
 import { ENUM_APP_ENVIROMENT } from 'src/lib/swagger.constraint';
+import { AccountModule } from 'src/modules/accounts/account.module';
+import { UserRepositoryModule } from 'src/modules/accounts/repository/user.repository.module';
+import { EmailModule } from 'src/modules/email/email.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -98,8 +104,17 @@ import { AppService } from './app.service';
             useFactory: (databaseOptionsService: DatabaseOptionsService) =>
                 databaseOptionsService.createOptions(),
         }),
+        AccountModule,
+        AuthModule,
+        HelpersModule,
+        UserRepositoryModule,
+        EmailModule,
     ],
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+    configure(consumer: MiddlewareConsumer): void {
+        consumer.apply(AppLoggerMiddleware).forRoutes('*');
+    }
+}

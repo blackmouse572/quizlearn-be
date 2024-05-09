@@ -34,6 +34,17 @@ export class UserCreateDto {
     readonly fullName: string;
 
     @ApiProperty({
+        example: faker.image.avatar(),
+        required: true,
+    })
+    @IsString()
+    @IsOptional()
+    @MinLength(1)
+    @MaxLength(100)
+    @Type(() => String)
+    readonly avatar: string;
+
+    @ApiProperty({
         example: faker.string.uuid(),
         required: true,
     })
@@ -60,12 +71,9 @@ export class UserCreateDto {
         required: false,
     })
     @IsDate()
+    @Type(() => Date)
     @IsOptional()
     readonly dob?: Date;
 
-    @ApiProperty({
-        example: faker.number.int({ min: 1, max: 100 }),
-        required: false,
-    })
     readonly useAICount: number;
 }

@@ -6,13 +6,12 @@ import {
     Get,
     HttpCode,
     HttpStatus,
-    InternalServerErrorException,
     NotFoundException,
     Patch,
     Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ClientSession, Connection } from 'mongoose';
+import { Connection } from 'mongoose';
 import {
     AuthGoogleOAuth2Protected,
     AuthJwtAccessProtected,
@@ -20,7 +19,6 @@ import {
     AuthJwtRefreshProtected,
     AuthJwtToken,
 } from 'src/common/auth/decorators/auth.decorator';
-import { IAuthPassword } from 'src/common/auth/interfaces/auth.interface';
 import {
     AuthAccessPayloadSerialization,
     AuthGooglePayloadSerialization,
@@ -28,7 +26,6 @@ import {
 } from 'src/common/auth/serializations/auth.serialization';
 import { AuthService } from 'src/common/auth/services/auth.service';
 import { DatabaseConnection } from 'src/common/database/decorators/database.decorator';
-import { IResponse } from 'src/common/helpers/interfaces/response.interface';
 import {
     GetUser,
     UserAuthProtected,
@@ -36,7 +33,6 @@ import {
 } from 'src/modules/accounts/decorators/user.decorator';
 import { UserForgotPasswordDto } from 'src/modules/accounts/dtos/user-forgot-password.dto';
 import { UserLoginDto } from 'src/modules/accounts/dtos/user-login.dto';
-import { UserChangePasswordDto } from 'src/modules/accounts/dtos/user-update-password.dto';
 import { UserUpdateNameDto } from 'src/modules/accounts/dtos/user-update.dto';
 import { UserVerifyDto } from 'src/modules/accounts/dtos/user-verify.dto';
 import { UserDoc } from 'src/modules/accounts/repository/entities/user.entity';
@@ -48,7 +44,6 @@ import { UserService } from 'src/modules/accounts/services/account.service';
     path: '/auth',
 })
 export class UserAuthController {
-    awsS3Service: any;
     constructor(
         @DatabaseConnection() private readonly databaseConnection: Connection,
         private readonly userService: UserService,
@@ -57,7 +52,7 @@ export class UserAuthController {
 
     @HttpCode(HttpStatus.OK)
     @Post('/login')
-    async login(@Body() { email, password }: UserLoginDto): Promise<IResponse> {
+    async login(@Body() { email, password }: UserLoginDto) {
         const user: UserDoc = await this.userService.findOneByEmail(email);
         if (!user) {
             throw new NotFoundException({
@@ -123,19 +118,22 @@ export class UserAuthController {
             payloadHashedRefreshToken
         );
 
+        const accessTokenExpiresAt = new Date().setSeconds(
+            new Date().getSeconds() + expiresIn
+        );
         const userReponse = {
             ...user.toObject(),
 
             accessToken: {
                 token: accessToken,
-                expiresAt: expiresIn,
+                expiresAt: accessTokenExpiresAt,
             },
             refreshToken: {
                 token: refreshToken,
             },
         };
 
-        return { data: userReponse };
+        return userReponse;
     }
 
     @AuthGoogleOAuth2Protected()
@@ -143,7 +141,7 @@ export class UserAuthController {
     async loginGoogle(
         @AuthJwtPayload<AuthGooglePayloadSerialization>()
         { user: userPayload }: AuthGooglePayloadSerialization
-    ): Promise<IResponse> {
+    ) {
         const user: UserDoc = await this.userService.findOneByEmail(
             userPayload.email
         );
@@ -210,9 +208,7 @@ export class UserAuthController {
                 token: refreshToken,
             },
         };
-        return {
-            data: userReponse,
-        };
+        return userReponse;
     }
 
     @UserAuthProtected()
@@ -225,7 +221,7 @@ export class UserAuthController {
         @AuthJwtPayload<AuthRefreshPayloadSerialization>()
         refreshPayload: AuthRefreshPayloadSerialization,
         @GetUser() user: UserDoc
-    ): Promise<IResponse> {
+    ) {
         const payload = {
             _id: user._id,
             email: user.email,
@@ -261,82 +257,7 @@ export class UserAuthController {
             },
         };
 
-        return {
-            data: userReponse,
-        };
-    }
-
-    @UserProtected()
-    @AuthJwtAccessProtected()
-    @Patch('/change-password')
-    async changePassword(
-        @Body() body: UserChangePasswordDto,
-        @GetUser() user: UserDoc
-    ): Promise<void> {
-        const passwordAttempt: boolean =
-            await this.authService.getPasswordAttempt();
-        const maxPasswordAttempt: number =
-            await this.authService.getMaxPasswordAttempt();
-        if (passwordAttempt && user.passwordAttempt >= maxPasswordAttempt) {
-            throw new ForbiddenException({
-                statusCode:
-                    ENUM_USER_STATUS_CODE_ERROR.USER_PASSWORD_ATTEMPT_MAX_ERROR,
-                message: 'user.error.passwordAttemptMax',
-            });
-        }
-
-        const matchPassword: boolean = await this.authService.validateUser(
-            body.oldPassword,
-            user.password
-        );
-        if (!matchPassword) {
-            await this.userService.increasePasswordAttempt(user);
-
-            throw new BadRequestException({
-                statusCode:
-                    ENUM_USER_STATUS_CODE_ERROR.USER_PASSWORD_NOT_MATCH_ERROR,
-                message: 'user.error.passwordNotMatch',
-            });
-        }
-
-        const newMatchPassword: boolean = await this.authService.validateUser(
-            body.newPassword,
-            user.password
-        );
-        if (newMatchPassword) {
-            throw new BadRequestException({
-                statusCode:
-                    ENUM_USER_STATUS_CODE_ERROR.USER_PASSWORD_NEW_MUST_DIFFERENCE_ERROR,
-                message: 'user.error.newPasswordMustDifference',
-            });
-        }
-
-        const session: ClientSession =
-            await this.databaseConnection.startSession();
-        session.startTransaction();
-
-        try {
-            await this.userService.resetPasswordAttempt(user, { session });
-
-            const password: IAuthPassword =
-                await this.authService.createPassword(body.newPassword);
-
-            await this.userService.updatePassword(user, password, { session });
-
-            await session.commitTransaction();
-            await session.endSession();
-        } catch (err: any) {
-            await session.abortTransaction();
-            await session.endSession();
-
-            throw new InternalServerErrorException({
-                statusCode: ENUM_ERROR_STATUS_CODE_ERROR.ERROR_UNKNOWN,
-                message: 'http.serverError.internalServerError',
-                _error: err.message,
-            });
-        }
-
-        return;
+        return userReponse;
     }
 
     @AuthJwtAccessProtected()
@@ -344,15 +265,8 @@ export class UserAuthController {
     async info(
         @AuthJwtPayload<AuthAccessPayloadSerialization>()
         payload: AuthAccessPayloadSerialization
-    ): Promise<IResponse> {
-        return { data: payload };
-    }
-
-    @UserProtected()
-    @AuthJwtAccessProtected()
-    @Get('/profile')
-    async profile(@GetUser() user: UserDoc): Promise<IResponse> {
-        return { data: user.toObject() };
+    ) {
+        return payload;
     }
 
     @UserProtected()

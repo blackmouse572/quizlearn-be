@@ -24,15 +24,6 @@ import { UserRepository } from 'src/modules/accounts/repository/repositories/use
 
 @Injectable()
 export class UserService implements IUserService {
-    increasePasswordAttempt(user: UserDoc) {
-        throw new Error('Method not implemented.');
-    }
-    resetPasswordAttempt(user: UserDoc, arg1: unknown) {
-        throw new Error('Method not implemented.');
-    }
-    updatePhoto(user: UserDoc, aws: AwsS3Serialization) {
-        throw new Error('Method not implemented.');
-    }
     private readonly uploadPath: string;
 
     private readonly mobileNumberCountryCodeAllowed: string[];
@@ -189,10 +180,12 @@ export class UserService implements IUserService {
 
     async updateName(
         repository: UserDoc,
-        { fullName }: UserUpdateNameDto,
+        { fullName, avatar, dob }: UserUpdateNameDto,
         options?: IDatabaseSaveOptions
     ): Promise<UserDoc> {
         repository.fullName = fullName;
+        repository.dob = dob;
+        repository.avatar = avatar;
 
         return this.userRepository.save(repository, options);
     }

@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { HelperDateService } from 'src/common/helpers/services/helper.date.service';
 import { HelperEncryptionService } from 'src/common/helpers/services/helper.encryption.service';
+import { HelperGoogleService } from 'src/common/helpers/services/helper.google.service';
 import { HelperHashService } from 'src/common/helpers/services/helper.hash.service';
 import { HelperStringService } from 'src/common/helpers/services/helper.string.service';
 
@@ -11,11 +12,13 @@ import { HelperStringService } from 'src/common/helpers/services/helper.string.s
         HelperEncryptionService,
         HelperHashService,
         HelperStringService,
+        HelperGoogleService,
         HelperDateService,
     ],
     exports: [
         HelperEncryptionService,
         HelperHashService,
+        HelperGoogleService,
         HelperStringService,
         HelperDateService,
     ],

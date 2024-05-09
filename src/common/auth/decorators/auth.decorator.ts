@@ -41,8 +41,8 @@ export function AuthJwtAccessProtected(): MethodDecorator {
 
 export function AuthJwtUserAccessProtected(): MethodDecorator {
     return applyDecorators(
-        UseGuards(AuthJwtAccessGuard, RolePayloadTypeGuard),
-        SetMetadata(ROLE_TYPE_META_KEY, ['user'])
+        SetMetadata(ROLE_TYPE_META_KEY, ['user']),
+        UseGuards(AuthJwtAccessGuard, RolePayloadTypeGuard)
     );
 }
 

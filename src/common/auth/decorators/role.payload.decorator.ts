@@ -19,7 +19,7 @@ export class RolePayloadTypeGuard implements CanActivate {
         const { user } = context.switchToHttp().getRequest<IRequestApp>();
         const { type } = user.user;
 
-        if (!requiredFor || type === 'admin') {
+        if (!requiredFor) {
             return true;
         }
 

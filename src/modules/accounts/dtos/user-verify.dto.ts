@@ -5,7 +5,7 @@ import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class UserVerifyDto {
     @ApiProperty({
-        example: faker.internet.email,
+        example: faker.internet.email(),
         required: true,
     })
     @IsString()
