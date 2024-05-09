@@ -1,8 +1,9 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty } from 'class-validator';
+import { IsMongoId, IsNotEmpty } from 'class-validator';
 
 export class UserRequestDto {
     @IsNotEmpty()
+    @IsMongoId()
     @Type(() => String)
     user: string;
 }

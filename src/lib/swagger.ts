@@ -41,6 +41,9 @@ export default async function (app: NestApplication) {
             jsonDocumentUrl: `${docPrefix}/json`,
             customSiteTitle: docTitle,
             explorer: false,
+            swaggerOptions: {
+                presistAuthorization: true,
+            },
             // swaggerOptions: {
             //     docExpansion: 'none',
             //     filter: true,

@@ -29,6 +29,12 @@ export default registerAs(
             encryptIv: process.env.AUTH_JWT_PAYLOAD_REFRESH_TOKEN_ENCRYPT_IV,
         },
 
+        resetPassword: {
+            secretKey:
+                process.env.AUTH_JWT_RESET_PASSWORD_TOKEN ??
+                '4hb4WLOWBQMa7R2wlWkbmAxcG22oVzfIoGyiCL7L8VnzfX',
+        },
+
         subject: process.env.AUTH_JWT_SUBJECT ?? 'ackDevelopment',
         audience: process.env.AUTH_JWT_AUDIENCE ?? 'https://example.com',
         issuer: process.env.AUTH_JWT_ISSUER ?? 'ack',

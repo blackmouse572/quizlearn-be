@@ -6,12 +6,13 @@ import {
     Get,
     HttpCode,
     HttpStatus,
+    InternalServerErrorException,
     NotFoundException,
     Patch,
     Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Connection } from 'mongoose';
+import { ClientSession, Connection } from 'mongoose';
 import {
     AuthGoogleOAuth2Protected,
     AuthJwtAccessProtected,
@@ -19,6 +20,7 @@ import {
     AuthJwtRefreshProtected,
     AuthJwtToken,
 } from 'src/common/auth/decorators/auth.decorator';
+import { IAuthPassword } from 'src/common/auth/interfaces/auth.interface';
 import {
     AuthAccessPayloadSerialization,
     AuthGooglePayloadSerialization,
@@ -31,12 +33,17 @@ import {
     UserAuthProtected,
     UserProtected,
 } from 'src/modules/accounts/decorators/user.decorator';
-import { UserForgotPasswordDto } from 'src/modules/accounts/dtos/user-forgot-password.dto';
+import {
+    UserForgotPasswordDto,
+    UserValidateResetToken,
+} from 'src/modules/accounts/dtos/user-forgot-password.dto';
 import { UserLoginDto } from 'src/modules/accounts/dtos/user-login.dto';
+import { UserResetPassword } from 'src/modules/accounts/dtos/user-reset-password.dto';
 import { UserUpdateNameDto } from 'src/modules/accounts/dtos/user-update.dto';
 import { UserVerifyDto } from 'src/modules/accounts/dtos/user-verify.dto';
 import { UserDoc } from 'src/modules/accounts/repository/entities/user.entity';
 import { UserService } from 'src/modules/accounts/services/account.service';
+import { EmailService } from 'src/modules/email/services/email.service';
 
 @ApiTags('modules.auth.user')
 @Controller({
@@ -47,7 +54,8 @@ export class UserAuthController {
     constructor(
         @DatabaseConnection() private readonly databaseConnection: Connection,
         private readonly userService: UserService,
-        private readonly authService: AuthService
+        private readonly authService: AuthService,
+        private readonly emailService: EmailService
     ) {}
 
     @HttpCode(HttpStatus.OK)
@@ -78,9 +86,11 @@ export class UserAuthController {
         }
 
         const payload = {
-            _id: user._id,
+            _id: user.id,
             email: user.email,
             username: user.username,
+            type: user.role,
+            isVerified: !!user.verified,
         };
         const expiresIn: number =
             await this.authService.getAccessTokenExpirationTime();
@@ -159,9 +169,11 @@ export class UserAuthController {
         }
 
         const payload = {
-            _id: user._id,
+            _id: user.id,
             email: user.email,
             username: user.username,
+            type: user.role,
+            isVerified: !!user.verified,
         };
         const loginDate: Date = await this.authService.getLoginDate();
         const expiresIn: number =
@@ -323,6 +335,96 @@ export class UserAuthController {
             await this.authService.getForgotPasswordTokenExpires();
 
         await this.userService.updateResetToken(user, token, expires);
+
+        await this.emailService.sendResetPassword(user, token);
+        return;
+    }
+
+    @HttpCode(HttpStatus.OK)
+    @Post('/validate-reset-token')
+    async validateResetToken(
+        @Body() { email, pin }: UserValidateResetToken
+    ): Promise<{ data: string }> {
+        const user: UserDoc = await this.userService.findOneByEmail(email);
+        if (!user) {
+            throw new NotFoundException({
+                statusCode: '404',
+                message: 'user.error.notFound',
+            });
+        }
+
+        if (user.resetToken !== pin) {
+            throw new BadRequestException({
+                statusCode: '400',
+                message: 'user.error.tokenNotMatch',
+            });
+        }
+
+        const token: string = await this.authService.encryptResetPasswordToken({
+            email: user.email,
+        });
+
+        return {
+            data: token,
+        };
+    }
+
+    @Post('/reset-password')
+    @HttpCode(HttpStatus.OK)
+    async resetPassword(
+        @Body() { token, password }: UserResetPassword
+    ): Promise<void> {
+        const isTokenValid: boolean =
+            await this.authService.verifyResetPasswordToken(token);
+
+        if (!isTokenValid) {
+            throw new BadRequestException({
+                statusCode: '400',
+                message: 'user.error.tokenNotMatch',
+            });
+        }
+
+        const payload = await this.authService.decryptResetPasswordToken({
+            data: token,
+        });
+        if (!payload) {
+            throw new BadRequestException({
+                statusCode: '400',
+                message: 'user.error.tokenNotMatch',
+            });
+        }
+        const { email } = payload;
+        const user: UserDoc = await this.userService.findOneByEmail(email);
+
+        if (!user) {
+            throw new NotFoundException({
+                statusCode: '404',
+                message: 'user.error.notFound',
+            });
+        }
+
+        const session: ClientSession =
+            await this.databaseConnection.startSession();
+        session.startTransaction();
+
+        try {
+            const _password: IAuthPassword =
+                await this.authService.createPassword(password);
+
+            await this.userService.updatePassword(user, _password, { session });
+
+            await session.commitTransaction();
+            await session.endSession();
+        } catch (err: any) {
+            await session.abortTransaction();
+            await session.endSession();
+
+            throw new InternalServerErrorException({
+                statusCode: '500',
+                message: 'http.serverError.internalServerError',
+                _error: err.message,
+            });
+        }
 
         return;
     }

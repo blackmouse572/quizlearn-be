@@ -29,10 +29,18 @@ export class UserPublicController {
         const emailExist = await this.userService.existByEmail(email);
 
         if (emailExist) {
-            throw new ConflictException({
-                statusCode: '400',
-                message: 'user.error.emailExist',
-            });
+            const user = await this.userService.findOneByEmail<UserDoc>(email);
+            const isVerified = await this.userService.isVerified(user);
+            if (!isVerified) {
+                this.emailService.sendVerification(
+                    user,
+                    user.verificationToken
+                );
+                throw new ConflictException({
+                    statusCode: '400',
+                    message: 'user.error.emailExist',
+                });
+            }
         }
 
         const password = await this.authService.createPassword(body.password);

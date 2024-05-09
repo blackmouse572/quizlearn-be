@@ -22,6 +22,10 @@ export class EmailService implements IEmailService {
     ) {
         this.appName = this.configService.get<string>('app.name');
         this.fromEmail = this.configService.get<string>('email.fromEmail');
+        this.logger.debug('Config is loaded', {
+            appName: this.appName,
+            fromEmail: this.fromEmail,
+        });
     }
     async sendVerification(user: UserDoc, token: string): Promise<boolean> {
         this.logger.log(`Send verify email to user ${user.email}`);

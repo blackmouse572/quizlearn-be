@@ -33,6 +33,15 @@ export class AuthAccessPayloadSerialization {
     readonly loginFrom: string;
 }
 
+export class AuthResetPasswordSerialization {
+    @ApiProperty({
+        required: true,
+        nullable: false,
+    })
+    @Expose()
+    readonly email: string;
+}
+
 export class AuthGooglePayloadDataSerialization {
     @ApiProperty({
         required: true,
