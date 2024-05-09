@@ -1,7 +1,8 @@
-import { Controller, Get, Param, Patch } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Controller, Get, Param, Post } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiAccessToken } from 'src/common/auth/decorators/api.access-token.decorator';
 import { AuthJwtAdminAccessProtected } from 'src/common/auth/decorators/auth.decorator';
-import { AuthService } from 'src/common/auth/services/auth.service';
 import { IResponsePaging } from 'src/common/helpers/interfaces/response.interface';
 import {
     PaginationQuery,
@@ -21,7 +22,9 @@ import {
 } from 'src/modules/accounts/constants/user.constant';
 import {
     UserAdminGetGuard,
-    UserAdminUpdateInactiveGuard,
+    UserAdminUpdateBannedGuard,
+    UserAdminUpdateUnBannedGuard,
+    UserAdminWarnGuard,
 } from 'src/modules/accounts/decorators/admin.decorator';
 import { GetUser } from 'src/modules/accounts/decorators/user.decorator';
 import { UserRequestDto } from 'src/modules/accounts/dtos/user.req.dto';
@@ -34,9 +37,9 @@ import { EmailService } from 'src/modules/email/services/email.service';
     version: '1',
     path: '/accounts',
 })
+@ApiAccessToken()
 export class UserAdminController {
     constructor(
-        private readonly authService: AuthService,
         private readonly paginationService: PaginationService,
         private readonly userService: UserService,
         private readonly emailService: EmailService
@@ -92,26 +95,155 @@ export class UserAdminController {
     @UserAdminGetGuard()
     @AuthJwtAdminAccessProtected()
     @RequestParamGuard(UserRequestDto)
+    @ApiOperation({
+        summary: 'Get user',
+        description: 'Get user by id',
+        parameters: [
+            {
+                in: 'path',
+                name: 'user',
+                required: true,
+                schema: {
+                    type: 'string',
+                },
+            },
+        ],
+    })
     @Get('/:user')
-    async get(
-        @GetUser() user: UserDoc,
-        @Param('user') _user: string
-    ): Promise<UserDoc> {
-        if (user.id === _user) {
-            return user;
-        }
-
-        return await this.userService.findOneById(_user);
+    async get(@GetUser() user: UserDoc): Promise<UserDoc> {
+        return user;
     }
 
-    @UserAdminUpdateInactiveGuard()
+    @UserAdminUpdateBannedGuard()
     @AuthJwtAdminAccessProtected()
     @RequestParamGuard(UserRequestDto)
-    @Patch('/update/:user/inactive')
-    async inactive(@GetUser() user: UserDoc): Promise<void> {
-        await this.userService.inactive(user);
+    @ApiOperation({
+        summary: 'Ban user',
+        description:
+            "Ban user by id, if user is banned, user can't login to the system. Required user is verified and not banned",
+        parameters: [
+            {
+                in: 'path',
+                name: 'user',
+                required: true,
+                schema: {
+                    type: 'string',
+                },
+            },
+        ],
+    })
+    @Post('/ban/:user')
+    async banUser(
+        @GetUser() user: UserDoc,
+        @Param('user') _: string
+    ): Promise<UserDoc> {
+        return this.userService.banned(user);
+    }
 
-        return;
+    @UserAdminUpdateUnBannedGuard()
+    @AuthJwtAdminAccessProtected()
+    @RequestParamGuard(UserRequestDto)
+    @ApiOperation({
+        summary: 'Unban user',
+        description:
+            "Unban user by id, if user is banned, user can't login to the system. Required user is verified and banned",
+        parameters: [
+            {
+                in: 'path',
+                name: 'user',
+                required: true,
+                schema: {
+                    type: 'string',
+                },
+            },
+        ],
+    })
+    @Post('/unban/:user')
+    async unbannedUser(
+        @GetUser() user: UserDoc,
+        @Param('user') _: string
+    ): Promise<UserDoc> {
+        return this.userService.unbanned(user);
+    }
+
+    @UserAdminWarnGuard()
+    @AuthJwtAdminAccessProtected()
+    @RequestParamGuard(UserRequestDto)
+    @Post('/warning/:user')
+    @ApiOperation({
+        summary: 'Warning user',
+        description:
+            'Warning user by id, if user is already warned, user will be banned. Email will be sent to user.',
+        parameters: [
+            {
+                in: 'path',
+                name: 'user',
+                required: true,
+                schema: {
+                    type: 'string',
+                },
+            },
+        ],
+    })
+    async warnUser(@GetUser() user: UserDoc): Promise<UserDoc> {
+        const isWarning = this.userService.getIsWarned(user);
+        if (isWarning) {
+            this.emailService.sendBan(user);
+            return this.userService.banned(user);
+        } else {
+            this.emailService.sendWarning(user);
+            return this.userService.warningUser(user);
+        }
+    }
+
+    @AuthJwtAdminAccessProtected()
+    @Get('/ban/users')
+    @ApiOperation({
+        summary: 'List banned users',
+        description: 'List all banned users',
+    })
+    async listnBannedUsers(
+        @PaginationQuery(
+            USER_DEFAULT_PER_PAGE,
+            USER_DEFAULT_ORDER_BY,
+            USER_DEFAULT_ORDER_DIRECTION,
+            USER_DEFAULT_AVAILABLE_SEARCH,
+            USER_DEFAULT_AVAILABLE_ORDER_BY
+        )
+        { _search, _limit, _offset, _order }: PaginationListDto,
+        @PaginationQueryFilterEqualObjectId('role')
+        role: Record<string, any>
+    ): Promise<IResponsePaging> {
+        const find: Record<string, any> = {
+            ..._search,
+            ...role,
+            isBan: true,
+        };
+
+        const users = await this.userService.findAll(find, {
+            paging: {
+                limit: _limit,
+                offset: _offset,
+            },
+            order: _order,
+            omit: ['passwordHash', 'verificationToken', 'resetToken'],
+        });
+        const total: number = await this.userService.getTotal(find);
+        const totalPage: number = this.paginationService.totalPage(
+            total,
+            _limit
+        );
+
+        return {
+            _pagination: { total, totalPage },
+            metadata: {
+                total,
+                hasMore: totalPage > _offset + 1,
+                skip: _offset,
+                take: _limit,
+            },
+            data: users,
+        };
     }
 
     // @UserAdminUpdateActiveGuard()

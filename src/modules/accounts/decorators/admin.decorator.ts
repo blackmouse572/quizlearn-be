@@ -7,6 +7,7 @@ import {
 import { UserBanedGuard } from 'src/modules/accounts/guards/user.baned.guard';
 import { UserNotFoundGuard } from 'src/modules/accounts/guards/user.not-found.guard';
 import { UserPutToRequestGuard } from 'src/modules/accounts/guards/user.put-to-request.guard';
+import { UserUnBanedGuard } from 'src/modules/accounts/guards/user.unbanned.guard';
 import { UserVerifiedGuard } from 'src/modules/accounts/guards/user.verify.guard';
 
 export function UserAdminGetGuard(): MethodDecorator {
@@ -49,7 +50,7 @@ export function UserAdminUpdateActiveGuard(): MethodDecorator {
     );
 }
 
-export function UserAdminUpdateBlockedGuard(): MethodDecorator {
+export function UserAdminUpdateBannedGuard(): MethodDecorator {
     return applyDecorators(
         UseGuards(
             UserPutToRequestGuard,
@@ -58,5 +59,28 @@ export function UserAdminUpdateBlockedGuard(): MethodDecorator {
             UserVerifiedGuard
         ),
         SetMetadata(USER_BLOCKED_META_KEY, [false])
+    );
+}
+
+export function UserAdminUpdateUnBannedGuard(): MethodDecorator {
+    return applyDecorators(
+        UseGuards(
+            UserPutToRequestGuard,
+            UserNotFoundGuard,
+            UserUnBanedGuard,
+            UserVerifiedGuard
+        ),
+        SetMetadata(USER_BLOCKED_META_KEY, [false])
+    );
+}
+
+export function UserAdminWarnGuard(): MethodDecorator {
+    return applyDecorators(
+        UseGuards(
+            UserPutToRequestGuard,
+            UserNotFoundGuard,
+            UserUnBanedGuard,
+            UserVerifiedGuard
+        )
     );
 }

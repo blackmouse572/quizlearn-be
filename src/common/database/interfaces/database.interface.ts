@@ -8,6 +8,7 @@ export interface IDatabaseFindOneOptions<T = any>
     join?: boolean | PopulateOptions | PopulateOptions[];
     session?: T;
     withDeleted?: boolean;
+    omit?: string[];
 }
 
 export type IDatabaseGetTotalOptions<T = any> = Pick<

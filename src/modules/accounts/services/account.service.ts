@@ -296,4 +296,19 @@ export class UserService implements IUserService {
             { ...options, withDeleted: true }
         );
     }
+
+    async isVerified(repository: UserDoc): Promise<boolean> {
+        return !!repository.verified;
+    }
+
+    getIsWarned(repository: UserDoc): boolean {
+        return !!repository.isWarning;
+    }
+    warningUser(
+        repository: UserDoc,
+        options?: IDatabaseSaveOptions
+    ): Promise<UserDoc> {
+        repository.isWarning = true;
+        return this.userRepository.save(repository, options);
+    }
 }

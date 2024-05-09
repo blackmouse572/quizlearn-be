@@ -14,3 +14,15 @@ export class UserForgotPasswordDto {
     @Type(() => String)
     readonly email: string;
 }
+
+export class UserValidateResetToken extends UserForgotPasswordDto {
+    @ApiProperty({
+        example: faker.string.alphanumeric(6),
+        required: true,
+    })
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(8)
+    @Type(() => String)
+    readonly pin: string;
+}

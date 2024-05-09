@@ -125,4 +125,10 @@ export interface IUserService {
         verifyToken: string,
         options?: IDatabaseSaveOptions
     ): Promise<UserDoc>;
+    isVerified(
+        repository: UserDoc,
+        options?: IDatabaseSaveOptions
+    ): Promise<boolean>;
+    getIsWarned(repository: UserDoc): boolean;
+    warningUser(repository: UserDoc): Promise<UserDoc>;
 }

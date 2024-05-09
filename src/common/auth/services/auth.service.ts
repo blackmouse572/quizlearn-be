@@ -7,6 +7,7 @@ import {
 import {
     AuthAccessPayloadSerialization,
     AuthRefreshPayloadSerialization,
+    AuthResetPasswordSerialization,
 } from 'src/common/auth/serializations/auth.serialization';
 import { IHelperGooglePayload } from 'src/common/helpers/interfaces/helper.google.interface';
 import { HelperDateService } from 'src/common/helpers/services/helper.date.service';
@@ -21,6 +22,8 @@ export class AuthService {
     private readonly accessTokenExpirationTime: number;
     private readonly accessTokenEncryptKey: string;
     private readonly accessTokenEncryptIv: string;
+
+    private readonly resetPasswordSecretKey: string;
 
     private readonly refreshTokenSecretKey: string;
     private readonly refreshTokenExpirationTime: number;
@@ -86,6 +89,10 @@ export class AuthService {
         this.passwordSaltLength = this.configService.get<number>(
             'auth.password.saltLength'
         );
+
+        this.resetPasswordSecretKey = this.configService.get<string>(
+            'auth.resetPassword.secretKey'
+        );
     }
 
     async encryptAccessToken(
@@ -98,6 +105,16 @@ export class AuthService {
         );
     }
 
+    async encryptResetPasswordToken(payload: AuthResetPasswordSerialization) {
+        return this.helperEncryptionService.jwtEncrypt(payload, {
+            secretKey: this.resetPasswordSecretKey,
+            audience: this.audience,
+            issuer: this.issuer,
+            subject: this.subject,
+            expiredIn: 60 * 60,
+        });
+    }
+
     async decryptAccessToken({
         data,
     }: Record<string, any>): Promise<AuthAccessPayloadSerialization> {
@@ -106,6 +123,23 @@ export class AuthService {
             this.accessTokenEncryptKey,
             this.accessTokenEncryptIv
         ) as AuthAccessPayloadSerialization;
+    }
+
+    async verifyResetPasswordToken(token: string): Promise<boolean> {
+        return this.helperEncryptionService.jwtVerify(token, {
+            secretKey: this.resetPasswordSecretKey,
+            audience: this.audience,
+            issuer: this.issuer,
+            subject: this.subject,
+        });
+    }
+
+    async decryptResetPasswordToken({
+        data,
+    }: Record<string, any>): Promise<AuthResetPasswordSerialization> {
+        return this.helperEncryptionService.jwtDecrypt(
+            data
+        ) as AuthResetPasswordSerialization;
     }
 
     async createAccessToken(
@@ -293,7 +327,7 @@ export class AuthService {
     }
 
     createForgotPasswordToken(): string | Promise<string> {
-        const token = this.helperStringService.random(8);
+        const token = this.helperStringService.random(6);
         return token;
     }
     getForgotPasswordTokenExpires(): Date | PromiseLike<Date> {
