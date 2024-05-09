@@ -95,11 +95,22 @@ export class UserAdminController {
     @UserAdminGetGuard()
     @AuthJwtAdminAccessProtected()
     @RequestParamGuard(UserRequestDto)
+    @ApiOperation({
+        summary: 'Get user',
+        description: 'Get user by id',
+        parameters: [
+            {
+                in: 'path',
+                name: 'user',
+                required: true,
+                schema: {
+                    type: 'string',
+                },
+            },
+        ],
+    })
     @Get('/:user')
-    async get(
-        @GetUser() user: UserDoc,
-        @Param('user') _user: string
-    ): Promise<UserDoc> {
+    async get(@GetUser() user: UserDoc): Promise<UserDoc> {
         return user;
     }
 
@@ -186,7 +197,12 @@ export class UserAdminController {
     }
 
     @AuthJwtAdminAccessProtected()
+    @RequestParamGuard(UserRequestDto)
     @Get('/ban/users')
+    @ApiOperation({
+        summary: 'List banned users',
+        description: 'List all banned users',
+    })
     async listnBannedUsers(
         @PaginationQuery(
             USER_DEFAULT_PER_PAGE,

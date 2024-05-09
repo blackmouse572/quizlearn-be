@@ -11,7 +11,7 @@ import {
     Patch,
     Post,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ClientSession, Connection } from 'mongoose';
 import {
     AuthGoogleOAuth2Protected,
@@ -318,6 +318,11 @@ export class UserAuthController {
 
     @HttpCode(HttpStatus.OK)
     @Post('/forgot-password')
+    @ApiOperation({
+        summary: 'Forgot password',
+        description:
+            'Generate a PIN code and send it to the user email to reset the password',
+    })
     async forgotPassword(
         @Body() { email }: UserForgotPasswordDto
     ): Promise<void> {
@@ -342,6 +347,11 @@ export class UserAuthController {
 
     @HttpCode(HttpStatus.OK)
     @Post('/validate-reset-token')
+    @ApiOperation({
+        summary: 'Validate reset token',
+        description:
+            'Validate the PIN and return the jwt token for verify user',
+    })
     async validateResetToken(
         @Body() { email, pin }: UserValidateResetToken
     ): Promise<{ data: string }> {
@@ -371,6 +381,11 @@ export class UserAuthController {
 
     @Post('/reset-password')
     @HttpCode(HttpStatus.OK)
+    @ApiOperation({
+        summary: 'Reset password',
+        description:
+            'Reset the password with the jwt token got from /validate-reset-token',
+    })
     async resetPassword(
         @Body() { token, password }: UserResetPassword
     ): Promise<void> {
