@@ -197,7 +197,6 @@ export class UserAdminController {
     }
 
     @AuthJwtAdminAccessProtected()
-    @RequestParamGuard(UserRequestDto)
     @Get('/ban/users')
     @ApiOperation({
         summary: 'List banned users',
