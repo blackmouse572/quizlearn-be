@@ -73,3 +73,14 @@ export function UserAdminUpdateUnBannedGuard(): MethodDecorator {
         SetMetadata(USER_BLOCKED_META_KEY, [false])
     );
 }
+
+export function UserAdminWarnGuard(): MethodDecorator {
+    return applyDecorators(
+        UseGuards(
+            UserPutToRequestGuard,
+            UserNotFoundGuard,
+            UserUnBanedGuard,
+            UserVerifiedGuard
+        )
+    );
+}

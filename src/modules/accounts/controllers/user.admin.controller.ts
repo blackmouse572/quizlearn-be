@@ -24,6 +24,7 @@ import {
     UserAdminGetGuard,
     UserAdminUpdateBannedGuard,
     UserAdminUpdateUnBannedGuard,
+    UserAdminWarnGuard,
 } from 'src/modules/accounts/decorators/admin.decorator';
 import { GetUser } from 'src/modules/accounts/decorators/user.decorator';
 import { UserRequestDto } from 'src/modules/accounts/dtos/user.req.dto';
@@ -99,11 +100,7 @@ export class UserAdminController {
         @GetUser() user: UserDoc,
         @Param('user') _user: string
     ): Promise<UserDoc> {
-        if (user.id === _user) {
-            return user;
-        }
-
-        return await this.userService.findOneById(_user);
+        return user;
     }
 
     @UserAdminUpdateBannedGuard()
@@ -157,6 +154,10 @@ export class UserAdminController {
     ): Promise<UserDoc> {
         return this.userService.unbanned(user);
     }
+
+    @UserAdminWarnGuard()
+    @AuthJwtAdminAccessProtected()
+    @RequestParamGuard(UserRequestDto)
     @Post('/warning/:user')
     @ApiOperation({
         summary: 'Warning user',
@@ -173,10 +174,7 @@ export class UserAdminController {
             },
         ],
     })
-    async warnUser(
-        @GetUser() user: UserDoc,
-        @Param('user') _: string
-    ): Promise<UserDoc> {
+    async warnUser(@GetUser() user: UserDoc): Promise<UserDoc> {
         const isWarning = this.userService.getIsWarned(user);
         if (isWarning) {
             this.emailService.sendBan(user);

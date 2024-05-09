@@ -302,7 +302,7 @@ export class UserService implements IUserService {
     }
 
     getIsWarned(repository: UserDoc): boolean {
-        return repository.isWarning;
+        return !!repository.isWarning;
     }
     warningUser(
         repository: UserDoc,
