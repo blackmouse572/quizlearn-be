@@ -13,6 +13,8 @@ import { ENUM_APP_ENVIROMENT } from 'src/lib/swagger.constraint';
 import { AccountModule } from 'src/modules/accounts/account.module';
 import { UserRepositoryModule } from 'src/modules/accounts/repository/user.repository.module';
 import { EmailModule } from 'src/modules/email/email.module';
+import { QuizbankModule } from 'src/modules/quizbank/quizbank.module';
+import { QuizbankRepositoryModule } from 'src/modules/quizbank/repository/quizbank-repository.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -109,6 +111,8 @@ import { AppService } from './app.service';
         HelpersModule,
         UserRepositoryModule,
         EmailModule,
+        QuizbankRepositoryModule,
+        QuizbankModule,
     ],
     controllers: [AppController],
     providers: [AppService],

@@ -16,7 +16,6 @@ import {
     UserDoc,
     UserEntity,
 } from 'src/modules/accounts/repository/entities/user.entity';
-
 export interface IUserService {
     findAll<T>(
         find?: Record<string, any>,

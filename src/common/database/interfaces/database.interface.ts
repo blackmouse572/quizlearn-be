@@ -24,7 +24,9 @@ export type IDatabaseSaveOptions<T = any> = Pick<
 // find
 export interface IDatabaseFindAllOptions<T = any>
     extends IPaginationOptions,
-        Omit<IDatabaseFindOneOptions<T>, 'order'> {}
+        Omit<IDatabaseFindOneOptions<T>, 'order'> {
+    lean?: boolean;
+}
 
 // create
 

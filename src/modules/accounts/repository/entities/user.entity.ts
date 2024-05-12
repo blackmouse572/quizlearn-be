@@ -21,7 +21,6 @@ export class UserEntity extends DatabaseMongoObjectIdEntityAbstract {
     @Prop({
         required: true,
         index: true,
-        lowercase: true,
         trim: true,
         type: String,
         maxlength: 50,
@@ -32,8 +31,8 @@ export class UserEntity extends DatabaseMongoObjectIdEntityAbstract {
         required: false,
         sparse: true,
         trim: true,
-        unique: true,
         type: String,
+        default: '',
     })
     avatar?: string;
 
