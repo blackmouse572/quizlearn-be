@@ -17,13 +17,14 @@ export function PaginationPagingPipe(
         async transform(
             value: Record<string, any>
         ): Promise<Record<string, any>> {
+            const perPage: number = this.paginationService.perPage(
+                Number(value?.take ?? defaultPerPage)
+            );
+            const offset: number = Number(value?.skip ?? 0);
+
             const page: number = this.paginationService.page(
                 Number(value?.page ?? 1)
             );
-            const perPage: number = this.paginationService.perPage(
-                Number(value?.perPage ?? defaultPerPage)
-            );
-            const offset: number = this.paginationService.offset(page, perPage);
 
             this.request.__pagination = {
                 ...this.request.__pagination,

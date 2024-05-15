@@ -35,7 +35,7 @@ export class QuizService implements IQuizService {
         quizbankId: string,
         options?: IDatabaseSaveOptions
     ): Promise<QuizDoc[]> {
-        return this.quizRepository.findAll({ quizbank: quizbankId }, options);
+        return this.quizRepository.findAll({ quizBank: quizbankId }, options);
     }
     deleteQuizzesByQuizbankId(
         quizbankId: string,

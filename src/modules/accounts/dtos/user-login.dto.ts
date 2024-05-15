@@ -1,7 +1,11 @@
-import { PickType } from '@nestjs/swagger';
-import { UserCreateDto } from 'src/modules/accounts/dtos/user-create.dto';
+import { IsString, MinLength } from 'class-validator';
 
-export class UserLoginDto extends PickType(UserCreateDto, [
-    'email',
-    'password',
-] as const) {}
+export class UserLoginDto {
+    @IsString()
+    @MinLength(3)
+    emailOrUsername: string;
+
+    @IsString()
+    @MinLength(6)
+    password: string;
+}

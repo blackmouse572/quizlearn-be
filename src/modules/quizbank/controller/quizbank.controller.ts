@@ -183,7 +183,7 @@ export class QuizbankController {
         summary: 'Get all quizbank related to quizbank',
         description: 'This only return quizbank that have same tags',
     })
-    @Get('/:quizbank/related')
+    @Get('/related/:quizbank')
     @QuizbankProtected()
     async getRelatedQuizbanks(@GetQuizbank() quizbank: IQuizbankDoc) {
         const find = {
@@ -191,7 +191,9 @@ export class QuizbankController {
             visibility: ENUM_QUIZBANK_VISIBILITY.PUBLIC,
         };
 
-        return this.quizbankService.findAll(find);
+        return this.quizbankService.findAll(find, {
+            paging: { limit: 5, offset: 0 },
+        });
     }
 
     @ApiOperation({

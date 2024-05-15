@@ -79,7 +79,7 @@ export abstract class DatabaseMongoObjectIdRepositoryAbstract<
                     : (options.join as PopulateOptions | PopulateOptions[])
             );
         }
-        if (options.omit) {
+        if (options?.omit) {
             // delete omitted fields
             options.omit.forEach((field) => {
                 findAll.select(`-${field}`);

@@ -60,8 +60,11 @@ export class UserAuthController {
 
     @HttpCode(HttpStatus.OK)
     @Post('/login')
-    async login(@Body() { email, password }: UserLoginDto) {
-        const user: UserDoc = await this.userService.findOneByEmail(email);
+    async login(@Body() { emailOrUsername, password }: UserLoginDto) {
+        const isEmail: boolean = emailOrUsername.includes('@');
+        const user: UserDoc = isEmail
+            ? await this.userService.findOneByEmail(emailOrUsername)
+            : await this.userService.findOneByUsername(emailOrUsername);
         if (!user) {
             throw new NotFoundException({
                 statusCode: '404',
@@ -90,7 +93,7 @@ export class UserAuthController {
             email: user.email,
             username: user.username,
             type: user.role,
-            isVerified: !!user.verified,
+            isVerified: user.verified === undefined,
         };
         const expiresIn: number =
             await this.authService.getAccessTokenExpirationTime();

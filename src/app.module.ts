@@ -6,6 +6,7 @@ import { AuthModule } from 'src/common/auth/auth.module';
 import { DATABASE_CONNECTION_NAME } from 'src/common/database/constants/database.constraint';
 import { DatabaseOptionsModule } from 'src/common/database/database.options.module';
 import { DatabaseOptionsService } from 'src/common/database/service/database.options.service';
+import { GeminiModule } from 'src/common/gemini/gemini.module';
 import { HelpersModule } from 'src/common/helpers/helpers.module';
 import { AppLoggerMiddleware } from 'src/common/logger/middleware/request.logger';
 import configs from 'src/configs';
@@ -113,6 +114,7 @@ import { AppService } from './app.service';
         EmailModule,
         QuizbankRepositoryModule,
         QuizbankModule,
+        GeminiModule,
     ],
     controllers: [AppController],
     providers: [AppService],
