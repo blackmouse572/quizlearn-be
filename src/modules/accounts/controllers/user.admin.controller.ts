@@ -83,7 +83,7 @@ export class UserAdminController {
         return {
             _pagination: { total, totalPage },
             metadata: {
-                total,
+                totals: total,
                 hasMore: totalPage > _offset + 1,
                 skip: _offset,
                 take: _limit,
@@ -237,7 +237,7 @@ export class UserAdminController {
         return {
             _pagination: { total, totalPage },
             metadata: {
-                total,
+                totals: total,
                 hasMore: totalPage > _offset + 1,
                 skip: _offset,
                 take: _limit,

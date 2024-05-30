@@ -262,7 +262,7 @@ export class UserService implements IUserService {
         repository: UserDoc,
         options?: IDatabaseSaveOptions
     ): Promise<UserDoc> {
-        repository.useAICount = 0;
+        repository.useAICount = 10;
 
         return this.userRepository.save(repository, options);
     }

@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import Joi from 'joi';
 import { AuthModule } from 'src/common/auth/auth.module';
 import { DATABASE_CONNECTION_NAME } from 'src/common/database/constants/database.constraint';
@@ -13,6 +14,8 @@ import configs from 'src/configs';
 import { ENUM_APP_ENVIROMENT } from 'src/lib/swagger.constraint';
 import { AccountModule } from 'src/modules/accounts/account.module';
 import { UserRepositoryModule } from 'src/modules/accounts/repository/user.repository.module';
+import { ClassroomModule } from 'src/modules/classroom/classroom.module';
+import { ClassroomRepositoryModule } from 'src/modules/classroom/repository/classroom.repository.module';
 import { EmailModule } from 'src/modules/email/email.module';
 import { QuizbankModule } from 'src/modules/quizbank/quizbank.module';
 import { QuizbankRepositoryModule } from 'src/modules/quizbank/repository/quizbank-repository.module';
@@ -115,6 +118,9 @@ import { AppService } from './app.service';
         QuizbankRepositoryModule,
         QuizbankModule,
         GeminiModule,
+        ClassroomRepositoryModule,
+        ClassroomModule,
+        ScheduleModule.forRoot(),
     ],
     controllers: [AppController],
     providers: [AppService],
