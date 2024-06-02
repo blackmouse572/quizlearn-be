@@ -131,10 +131,11 @@ export class ClassroomService implements ClassroomServiceInterface {
         repository.bannedAccountIds = Array.from(uniqueBnnedIds);
 
         // remove banned user from accountIds
-        repository.accountIds = repository.accountIds.filter(
-            (accountId) => !ids.includes(accountId)
-        );
-
+        const accountIds = repository.accountIds;
+        ids.forEach((id) => {
+            accountIds.splice(accountIds.indexOf(id), 1);
+        });
+        repository.accountIds = accountIds;
         return this.save(repository);
     }
 

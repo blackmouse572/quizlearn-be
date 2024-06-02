@@ -171,7 +171,8 @@ export class ClassroomController {
 
         return classroom.save();
     }
-    @Post('/addquizbank/:classroomId')
+    @Post('/addquizbank/:classroom')
+    @ClassroomProtected()
     @ApiOperation({
         summary: 'Add a member to a classroom',
         description: 'Add new member to a classroom, you must be the author',
@@ -195,10 +196,11 @@ export class ClassroomController {
         classroom.bankIds.push(quizbank._id);
         await this.classroomService.save(classroom);
 
-        return classroom;
+        return quizbank;
     }
 
-    @Get('/classroom/:classroomId/quizbank')
+    @Get('/classroom/:classroom/quizbank')
+    @ClassroomProtected()
     @UserAuthProtected()
     @AuthJwtAccessProtected()
     async getQuizbanksByClassroom(

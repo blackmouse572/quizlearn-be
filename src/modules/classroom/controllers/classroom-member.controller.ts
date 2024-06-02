@@ -190,7 +190,7 @@ export class ClassroomMemberController {
         @Param('classroom') __: string
     ) {
         const isExist = classroom.accountIds.some((member) =>
-            body.membersIds.includes(member.toString())
+            body.memberIds.includes(member.toString())
         );
         if (!isExist) {
             throw new NotFoundException({
@@ -200,10 +200,10 @@ export class ClassroomMemberController {
         }
         const users = await this.userService.findAll({
             find: {
-                _id: { $in: body.membersIds },
+                _id: { $in: body.memberIds },
             },
         });
-        if (users.length !== body.membersIds.length) {
+        if (users.length !== body.memberIds.length) {
             throw new NotFoundException({
                 statusCode: 404,
                 message: 'classroom.member.not-found',
@@ -223,7 +223,7 @@ export class ClassroomMemberController {
     ) {
         const users = await this.userService.findAll({
             find: {
-                _id: { $in: body.membersIds },
+                _id: { $in: body.memberIds },
             },
         });
         return this.classroomService.banManyUser(classroom, users);
@@ -273,7 +273,7 @@ export class ClassroomMemberController {
     ) {
         const users = await this.userService.findAll({
             find: {
-                _id: { $in: body.membersIds },
+                _id: { $in: body.memberIds },
             },
         });
         return this.classroomService.unbanManyUser(classroom, users);

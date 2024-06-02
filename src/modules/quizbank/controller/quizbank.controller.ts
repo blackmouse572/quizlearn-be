@@ -212,16 +212,11 @@ export class QuizbankController {
     @QuizbankProtected()
     @ApiParam({ name: 'quizbank', type: String })
     async rateQuizbank(
-        @GetQuizbank() quizbank: QuizbankDoc,
+        @GetQuizbank() _quizbank: QuizbankDoc,
         @Query('star', ParseIntPipe) star: number,
         @GetUser() user: UserDoc
     ) {
-        quizbank.rating.push({
-            accountId: user.id,
-            star: star,
-        });
-
-        return this.quizbankService.save(quizbank);
+        return this.quizbankService.addRating(_quizbank, user._id, star);
     }
     @ApiOperation({
         summary: 'Get quizbank by id',

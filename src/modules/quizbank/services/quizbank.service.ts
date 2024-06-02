@@ -179,7 +179,16 @@ export class QuizbankService implements IQuizbankService {
 
         this.quizService.createQuizzes(quizzesCreate);
 
-        return this.quizbankRepository.save(repository, options);
+        return this.quizbankRepository.updateOne(
+            repository._id,
+            {
+                bankName: repository.bankName,
+                desciption: repository.desciption,
+                tags: repository.tags,
+                visibility: repository.visibility,
+            },
+            options
+        );
     }
 
     delete(
@@ -188,11 +197,11 @@ export class QuizbankService implements IQuizbankService {
     ): Promise<QuizbankDoc> {
         return this.quizbankRepository.delete(repository, options);
     }
-    save(
-        repository: QuizbankDoc,
-        options?: IDatabaseSaveOptions
-    ): Promise<QuizbankDoc> {
-        return this.quizbankRepository.save(repository, options);
+    save<T>(repository: T, options?: IDatabaseSaveOptions) {
+        return this.quizbankRepository.save(
+            repository as any,
+            options
+        ) as Promise<T>;
     }
     async populate(repository: QuizbankDoc): Promise<IQuizbankEntity> {
         const withAuthor = await this.populateAuthor(repository);
@@ -214,6 +223,20 @@ export class QuizbankService implements IQuizbankService {
             localField: 'author',
             foreignField: '_id',
             model: UserEntity.name,
+        });
+    }
+
+    addRating(repository: QuizbankDoc, accountId: string, star: number) {
+        const rating = new Set(repository.rating);
+        rating.add({
+            accountId,
+            star,
+        });
+
+        const ratingArr = Array.from(rating);
+
+        return this.quizbankRepository.updateOne(repository._id, {
+            rating: ratingArr,
         });
     }
 }

@@ -534,6 +534,18 @@ export abstract class DatabaseMongoObjectIdRepositoryAbstract<
         }
     }
 
+    updateOne(
+        id: string,
+        data: Record<string, any>,
+        options?: IDatabaseSaveOptions<ClientSession>
+    ): Promise<EntityDocument> {
+        return this._repository.findOneAndUpdate(
+            { _id: new Types.ObjectId(id) },
+            data,
+            options
+        );
+    }
+
     async softDeleteManyByIds(
         _id: string[],
         options?: IDatabaseSoftDeleteManyOptions<ClientSession>

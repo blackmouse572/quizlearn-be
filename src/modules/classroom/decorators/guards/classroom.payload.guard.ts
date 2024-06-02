@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+    CanActivate,
+    ExecutionContext,
+    Injectable,
+    InternalServerErrorException,
+} from '@nestjs/common';
 import { IRequestApp } from 'src/common/pagination/interfaces/request.interface';
 import { UserEntity } from 'src/modules/accounts/repository/entities/user.entity';
 import { ClassroomDoc } from 'src/modules/classroom/repository/entity/classroom.entity';
@@ -14,16 +19,23 @@ export class ClassroomPutToRequestGuard implements CanActivate {
             .getRequest<IRequestApp & { __classroom: ClassroomDoc }>();
         const { classroom } = request.params;
 
-        const check = await this.classroomService.findOneById(classroom, {
-            join: {
-                path: 'author',
-                localField: 'author',
-                foreignField: '_id',
-                model: UserEntity.name,
-                // remove password, role, tokens
-                select: '-password -role -verificationToken -useAICount -resetToken -resetTokenExpires',
-            },
-        });
+        const check = await this.classroomService
+            .findOneById(classroom, {
+                join: {
+                    path: 'author',
+                    localField: 'author',
+                    foreignField: '_id',
+                    model: UserEntity.name,
+                    // remove password, role, tokens
+                    select: '-password -role -verificationToken -useAICount -resetToken -resetTokenExpires',
+                },
+            })
+            .catch((e) => {
+                throw new InternalServerErrorException({
+                    message: 'Error while fetching classroom',
+                    error: e,
+                });
+            });
         request.__classroom = check;
 
         return true;
