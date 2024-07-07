@@ -1,7 +1,11 @@
-import { faker } from '@faker-js/faker';
 import { Injectable } from '@nestjs/common';
+import { customAlphabet } from 'nanoid';
 import { IHelperStringRandomOptions } from 'src/common/helpers/interfaces/helper.interface';
 import { IHelperStringService } from 'src/common/helpers/interfaces/helper.string-service.interface';
+
+const alphabet =
+    '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const onlyNumber = '0123456789';
 
 @Injectable()
 export class HelperStringService implements IHelperStringService {
@@ -23,21 +27,22 @@ export class HelperStringService implements IHelperStringService {
     }
 
     random(length: number, options?: IHelperStringRandomOptions): string {
-        const rString = options?.safe
-            ? faker.internet.password({
-                  length,
-                  memorable: true,
-                  pattern: /[A-Z]/,
-                  prefix: options?.prefix,
-              })
-            : faker.internet.password({
-                  length,
-                  memorable: false,
-                  pattern: /\w/,
-                  prefix: options?.prefix,
-              });
+        let rString = '';
+        if (options?.onlyNumber) {
+            rString = customAlphabet(onlyNumber, length)();
+        } else {
+            rString = customAlphabet(alphabet, length)();
+        }
 
-        return options?.upperCase ? rString.toUpperCase() : rString;
+        if (options?.upperCase) {
+            rString = rString.toUpperCase();
+        }
+
+        if (options?.safe) {
+            return rString;
+        }
+
+        return rString;
     }
 
     censor(value: string): string {

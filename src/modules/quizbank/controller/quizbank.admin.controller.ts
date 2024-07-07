@@ -1,10 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiAccessToken } from 'src/common/auth/decorators/api.access-token.decorator';
-import { AuthJwtAccessProtected } from 'src/common/auth/decorators/auth.decorator';
+import { AuthJwtAdminAccessProtected } from 'src/common/auth/decorators/auth.decorator';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dto/pagination.list.dto';
-import { UserAdminGetGuard } from 'src/modules/accounts/decorators/admin.decorator';
 import {
     QUIZBANK_DEFAULT_AVAILABLE_ORDER_BY,
     QUIZBANK_DEFAULT_AVAILABLE_SEARCH,
@@ -25,8 +24,7 @@ export class QuizbankAdminController {
     ) {}
 
     @Get('/')
-    @AuthJwtAccessProtected()
-    @UserAdminGetGuard()
+    @AuthJwtAdminAccessProtected()
     async getManyQuizbanks(
         @PaginationQuery(
             QUIZBANK_DEFAULT_PER_PAGE,
@@ -44,6 +42,7 @@ export class QuizbankAdminController {
         const quizbanksPromise = this.quizbankService.findAll(find, {
             paging: { limit: _limit, offset: _offset },
             order: _order,
+            join: true,
         });
         const totalPromise = this.quizbankService.getTotal(find, {
             paging: { limit: _limit, offset: _offset },

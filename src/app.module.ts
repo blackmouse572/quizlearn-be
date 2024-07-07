@@ -17,6 +17,8 @@ import { UserRepositoryModule } from 'src/modules/accounts/repository/user.repos
 import { ClassroomModule } from 'src/modules/classroom/classroom.module';
 import { ClassroomRepositoryModule } from 'src/modules/classroom/repository/classroom.repository.module';
 import { EmailModule } from 'src/modules/email/email.module';
+import { PostModule } from 'src/modules/post/post.module';
+import { PostRepositoryModule } from 'src/modules/post/repository/post.repository.module';
 import { QuizbankModule } from 'src/modules/quizbank/quizbank.module';
 import { QuizbankRepositoryModule } from 'src/modules/quizbank/repository/quizbank-repository.module';
 import { AppController } from './app.controller';
@@ -120,6 +122,8 @@ import { AppService } from './app.service';
         GeminiModule,
         ClassroomRepositoryModule,
         ClassroomModule,
+        PostModule,
+        PostRepositoryModule,
         ScheduleModule.forRoot(),
     ],
     controllers: [AppController],

@@ -99,7 +99,7 @@ export class QuizbankController {
             },
             data: quizbanks,
             metadata: {
-                total,
+                totals: total,
                 hasMore: total > _offset + 1,
                 skip: _offset,
                 take: _limit,

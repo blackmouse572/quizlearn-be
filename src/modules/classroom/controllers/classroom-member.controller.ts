@@ -78,7 +78,11 @@ export class ClassroomMemberController {
         if (!isOwner) {
             find = {
                 ..._search,
-                $or: [{ accountIds: user._id }, { author: user._id }],
+                $or: [
+                    { accountIds: user._id },
+                    { author: user._id },
+                    ..._search?.$or,
+                ],
             };
         } else {
             find = {

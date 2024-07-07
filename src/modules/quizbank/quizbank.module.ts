@@ -18,6 +18,6 @@ import { QuizbankService } from 'src/modules/quizbank/services/quizbank.service'
         PaginationModule,
         GeminiModule,
     ],
-    controllers: [QuizController, QuizbankController, QuizbankAdminController],
+    controllers: [QuizController, QuizbankAdminController, QuizbankController],
 })
 export class QuizbankModule {}

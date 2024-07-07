@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { PipelineStage } from 'mongoose';
 import {
     IDatabaseCreateOptions,
     IDatabaseFindAllOptions,
@@ -160,5 +161,32 @@ export class ClassroomService implements ClassroomServiceInterface {
 
     delete(repository: ClassroomDoc) {
         return this.classroomRepository.delete(repository);
+    }
+
+    findAllAdmin(
+        find: Record<string, any>,
+        options?: IDatabaseFindAllOptions<any>
+    ): Promise<ClassroomDoc[]> {
+        const pipeline: PipelineStage[] = [
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'author',
+                },
+            },
+            {
+                $unwind: '$author',
+            },
+            {
+                $addFields: {
+                    studentNumber: {
+                        $size: '$accountIds',
+                    },
+                },
+            },
+        ];
+        return this.classroomRepository.raw(pipeline, options);
     }
 }

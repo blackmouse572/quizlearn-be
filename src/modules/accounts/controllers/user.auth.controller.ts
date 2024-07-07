@@ -328,7 +328,7 @@ export class UserAuthController {
     })
     async forgotPassword(
         @Body() { email }: UserForgotPasswordDto
-    ): Promise<void> {
+    ): Promise<Record<string, any>> {
         const user: UserDoc = await this.userService.findOneByEmail(email);
         if (!user) {
             throw new NotFoundException({
@@ -345,7 +345,9 @@ export class UserAuthController {
         await this.userService.updateResetToken(user, token, expires);
 
         await this.emailService.sendResetPassword(user, token);
-        return;
+        return {
+            data: 'success',
+        };
     }
 
     @HttpCode(HttpStatus.OK)

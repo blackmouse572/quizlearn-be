@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     IAuthPassword,
@@ -18,6 +18,8 @@ import { HelperStringService } from 'src/common/helpers/services/helper.string.s
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     private readonly accessTokenSecretKey: string;
     private readonly accessTokenExpirationTime: number;
     private readonly accessTokenEncryptKey: string;
@@ -327,11 +329,18 @@ export class AuthService {
     }
 
     createForgotPasswordToken(): string | Promise<string> {
-        const token = this.helperStringService.random(6);
+        const token = this.helperStringService.random(6, {
+            upperCase: false,
+            onlyNumber: true,
+        });
+        this.logger.debug(`Forgot password token: ${token}`);
         return token;
     }
     getForgotPasswordTokenExpires(): Date | PromiseLike<Date> {
         const expires = this.helperDateService.forwardInMinutes(60);
+        this.logger.debug(
+            `Forgot password token expires: ${expires.toDateString()} [${expires}]`
+        );
         return expires;
     }
 }

@@ -84,12 +84,13 @@ export class ClassroomController {
         const find: Record<string, any> = {
             ..._search,
         };
-        const classrooms = await this.classroomService.findAll(find, {
+        const classrooms = await this.classroomService.findAllAdmin(find, {
             paging: {
                 limit: _limit,
                 offset: _offset,
             },
             order: _order,
+            join: true,
         });
 
         const total = await this.classroomService.total(find);
@@ -99,10 +100,10 @@ export class ClassroomController {
         return {
             _pagination: { total, totalPage },
             metadata: {
-                total,
-                limit: _limit,
-                offset: _offset,
-                order: _order,
+                take: _limit,
+                skip: _offset,
+                hasMore: total > _offset + 1,
+                totals: total,
             },
             data: classrooms,
         };
